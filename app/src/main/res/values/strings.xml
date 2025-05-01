@@ -1,3 +1,6 @@
 <resources>
     <string name="app_name">My Al-Quran</string>
+    <string name="default_web_client_id">685241384885-mc2capuikqh5g4vcbv8mekqenvpbmhlj.apps.googleusercontent.com</string>
+
+
 </resources>

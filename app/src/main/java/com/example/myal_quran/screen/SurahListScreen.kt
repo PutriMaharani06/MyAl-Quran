@@ -22,10 +22,18 @@ import androidx.navigation.NavController
 import com.example.myal_quran.viewmodel.SurahViewModel
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.draw.clip
+import coil.compose.AsyncImage
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SurahListScreen(navController: NavController, viewModel: SurahViewModel) {
+fun SurahListScreen(
+    navController: NavController,
+    viewModel: SurahViewModel,
+    account: GoogleSignInAccount?,
+    onLogoutClicked: () -> Unit
+) {
     val surahList = viewModel.surahList.collectAsState().value
     val isLoading = viewModel.isLoading.collectAsState().value
     val backgroundColor = Color(0xFFF9F5F0)
@@ -34,6 +42,7 @@ fun SurahListScreen(navController: NavController, viewModel: SurahViewModel) {
     val textColor = Color(0xFF393E46)
 
     var searchQuery by remember { mutableStateOf(TextFieldValue("")) }
+    var showProfileDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         containerColor = backgroundColor,
@@ -53,11 +62,97 @@ fun SurahListScreen(navController: NavController, viewModel: SurahViewModel) {
             )
         }
     ) { padding ->
+
+        if (showProfileDialog && account != null) {
+            AlertDialog(
+                onDismissRequest = { showProfileDialog = false },
+                confirmButton = {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        OutlinedButton(
+                            onClick = { showProfileDialog = false },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text("Tutup")
+                        }
+                        Button(
+                            onClick = {
+                                onLogoutClicked()
+                                showProfileDialog = false
+                                navController.navigate("home") {
+                                    popUpTo(0)
+                                }
+                            },
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.buttonColors(containerColor = accentColor)
+                        ) {
+                            Text("Logout", color = Color.White)
+                        }
+                    }
+                },
+                title = { Text("Profil Pengguna", fontWeight = FontWeight.Bold) },
+                text = {
+                    Column(horizontalAlignment = Alignment.Start) {
+                        account.photoUrl?.let { imageUrl ->
+                            AsyncImage(
+                                model = imageUrl,
+                                contentDescription = "Foto Profil",
+                                modifier = Modifier
+                                    .size(80.dp)
+                                    .clip(MaterialTheme.shapes.medium)
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+                        }
+                        Text("Nama: ${account.displayName ?: "-"}")
+                        Text("Email: ${account.email ?: "-"}")
+                        Spacer(modifier = Modifier.height(12.dp))
+                    }
+                }
+            )
+        }
+
         Box(modifier = Modifier.padding(padding)) {
             if (isLoading) {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
             } else {
                 Column(modifier = Modifier.fillMaxSize()) {
+
+                    if (account != null) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { showProfileDialog = true }
+                                .padding(horizontal = 16.dp, vertical = 8.dp)
+                        ) {
+                            account.photoUrl?.let { imageUrl ->
+                                AsyncImage(
+                                    model = imageUrl,
+                                    contentDescription = "Foto Profil",
+                                    modifier = Modifier
+                                        .size(48.dp)
+                                        .padding(end = 8.dp)
+                                        .clip(MaterialTheme.shapes.small)
+                                )
+                            }
+                            Column {
+                                Text(
+                                    text = account.displayName ?: "Pengguna",
+                                    fontWeight = FontWeight.Bold,
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                                Text(
+                                    text = account.email ?: "",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = Color.Gray
+                                )
+                            }
+                        }
+                    }
                     OutlinedTextField(
                         value = searchQuery,
                         onValueChange = { searchQuery = it },

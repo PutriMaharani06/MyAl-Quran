@@ -5,7 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
@@ -18,19 +18,21 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.alquran.R
-import kotlin.random.Random
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(navController: NavController) {
-    val primaryColor = Color(0xFF6D9886)
-    val backgroundColor = Color(0xFFF9F9F9)
+fun HomeScreen(
+    navController: NavController,
+    account: GoogleSignInAccount?,
+    onLoginClicked: () -> Unit,
+    onLogoutClicked: () -> Unit
+) {
 
+    val primaryColor = Color(0xFF6D9886)
     val gradientBackground = Brush.verticalGradient(
         colors = listOf(Color(0xFFE8F6EF), Color(0xFFDEF5E5))
     )
-
-    val randomSurahId = remember { Random.nextInt(1, 115) }
 
     Scaffold(
         topBar = {
@@ -56,9 +58,8 @@ fun HomeScreen(navController: NavController) {
             verticalArrangement = Arrangement.spacedBy(20.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(30.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
-            // Salam header
             Text(
                 text = "Assalamu’alaikum",
                 fontSize = 26.sp,
@@ -74,76 +75,59 @@ fun HomeScreen(navController: NavController) {
                 textAlign = TextAlign.Center
             )
 
-            // Gambar Qur'an (ikonnya bisa disesuaikan)
             Image(
                 painter = painterResource(id = R.drawable.alquran),
                 contentDescription = "Qur'an Illustration",
                 modifier = Modifier
                     .height(200.dp)
                     .fillMaxWidth()
-                    .padding(bottom = 24.dp)
             )
 
-            Column(
-                verticalArrangement = Arrangement.spacedBy(20.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
+            if (account == null) {
+                Button(
+                    onClick = onLoginClicked,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp)
+                ) {
+                    Text(text = "Login dengan Google")
+                }
+            } else {
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .shadow(6.dp, RoundedCornerShape(16.dp)),
-                    colors = CardDefaults.cardColors(containerColor = primaryColor),
-                    shape = RoundedCornerShape(16.dp),
-                    onClick = {
-                        navController.navigate("detail/$randomSurahId")
-                    }
+                        .shadow(4.dp, RoundedCornerShape(12.dp)),
+                    colors = CardDefaults.cardColors(containerColor = Color.White)
                 ) {
                     Column(
-                        modifier = Modifier
-                            .padding(24.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                        modifier = Modifier.padding(16.dp),
+                        horizontalAlignment = Alignment.Start
                     ) {
                         Text(
-                            text = "📖 Baca Surah Acak",
-                            fontSize = 20.sp,
+                            text = "👤 Profil Pengguna",
                             fontWeight = FontWeight.Bold,
-                            color = Color.White
+                            fontSize = 18.sp,
+                            color = primaryColor
                         )
-                        Text(
-                            text = "Mulailah dengan surah pilihan hari ini",
-                            fontSize = 14.sp,
-                            color = Color.White.copy(alpha = 0.8f)
-                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(text = "Nama: ${account.displayName ?: "-"}")
+                        Text(text = "Email: ${account.email ?: "-"}")
+                        Spacer(modifier = Modifier.height(12.dp))
+                        OutlinedButton(
+                            onClick = onLogoutClicked,
+                            modifier = Modifier.align(Alignment.End)
+                        ) {
+                            Text(text = "Logout")
+                        }
                     }
                 }
 
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .shadow(6.dp, RoundedCornerShape(16.dp)),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    shape = RoundedCornerShape(16.dp),
-                    onClick = {
-                        navController.navigate("surah_list")
-                    }
+                Spacer(modifier = Modifier.height(16.dp))
+                Button(
+                    onClick = { navController.navigate("surah_list") },
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Column(
-                        modifier = Modifier
-                            .padding(24.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            text = "📚 Daftar Surah",
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.Black
-                        )
-                        Text(
-                            text = "Jelajahi semua surah dalam Al-Qur'an",
-                            fontSize = 14.sp,
-                            color = Color.Gray
-                        )
-                    }
+                    Text("📖 Buka Daftar Surah")
                 }
             }
         }
